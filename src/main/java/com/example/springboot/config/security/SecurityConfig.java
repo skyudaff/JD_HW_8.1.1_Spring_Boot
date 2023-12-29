@@ -3,28 +3,45 @@ package com.example.springboot.config.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
-@EnableWebSecurity
+@EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 
     @Bean
     public UserDetailsService userDetailsService() {
         InMemoryUserDetailsManager manager = new InMemoryUserDetailsManager();
-        manager
-                .createUser(
-                        User.withDefaultPasswordEncoder()
-                                .username("admin")
-                                .password("12345")
-                                .roles("READ")
-                                .build()
-                );
+        manager.createUser(
+                User.withUsername("admin")
+                        .password(passwordEncoder().encode("12345"))
+                        .roles("READ", "WRITE", "DELETE")
+                        .build()
+        );
+        manager.createUser(
+                User.withUsername("writer")
+                        .password(passwordEncoder().encode("1234"))
+                        .roles("WRITE", "DELETE")
+                        .build()
+        );
+        manager.createUser(
+                User.withUsername("reader")
+                        .password(passwordEncoder().encode("123"))
+                        .roles("READ")
+                        .build()
+        );
 
         return manager;
     }
